@@ -25,8 +25,8 @@ class Minesweeper
       end
     end
     guess = guess.split(',')
-    if !(0...@board.grid.length - 1).include?(Integer(guess.first)) ||
-         !(0...@board.grid.length - 1).include?(Integer(guess.last))
+    if !(0...@board.grid.length).include?(Integer(guess.first)) ||
+         !(0...@board.grid.length).include?(Integer(guess.last))
       puts 'Position is not on the board.'
       return false
     end
@@ -42,8 +42,28 @@ class Minesweeper
   end
 
   def run
-    @board.render
-    @board.search_position(get_guess)
+    while !lost? && !win?
+      @board.render
+      @board.search_position(get_guess)
+    end
+  end
+
+  def win?
+    if @board.grid.flatten.none? { |tile| tile.revealed == false && tile.bomb == false }
+      @board.render
+      puts 'You win!'
+      return true
+    end
+    return false
+  end
+
+  def lost?
+    if @board.grid.flatten.any? { |tile| tile.revealed == true && tile.bomb == true }
+      @board.render
+      puts 'You lost!'
+      return true
+    end
+    return false
   end
 end
 
