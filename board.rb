@@ -84,14 +84,10 @@ class Board
   def search_position(position)
     return if self[position].revealed == true
     self[position].reveal
+    return if self[position].bomb == true
     look_up(position)
     look_down(position)
     look_left(position)
     look_right(position)
   end
 end
-
-board = Board.new
-board.render
-board.search_position([3, 3])
-board.render
