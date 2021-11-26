@@ -7,11 +7,11 @@ class Minesweeper
   end
 
   def guess_valid?(guess)
-    if guess.length != 3
-      puts 'Must be 3 characters! (ex. "4,2")'
+    if guess.length != 3 && (guess.length == 6 && guess[-3..-1] != ' -f')
+      puts 'Must be 3 characters or have a "-f" tag! (ex. "4,2 -f")'
       return false
     end
-    guess.each_char.with_index do |char, index|
+    guess[0...3].each_char.with_index do |char, index|
       if index == 1
         if char != ','
           puts 'Did you forget a comma?'
@@ -24,10 +24,17 @@ class Minesweeper
         end
       end
     end
-    guess = guess.split(',')
+    flag = guess[-1] == 'f'
+    guess = guess[0..3].split(',')
     if !(0...@board.grid.length).include?(Integer(guess.first)) ||
          !(0...@board.grid.length).include?(Integer(guess.last))
       puts 'Position is not on the board.'
+      return false
+    elsif !flag && @board[guess.map(&:to_i)].flagged == true
+      puts 'Can\'t guess a fagged position!'
+      return false
+    elsif @board[guess.map(&:to_i)].revealed == true
+      puts 'Can\'t guess a revealed position!'
       return false
     end
     return true
@@ -38,13 +45,18 @@ class Minesweeper
     guess = ''
     guess = gets.chomp
     guess = gets.chomp while !guess_valid?(guess)
-    guess.split(',').map { |x| Integer(x) }
+    if guess[-1] == 'f'
+      return guess[0, 3].split(',').map { |x| Integer(x) } + [guess[-1]]
+    else
+      return guess[0, 3].split(',').map { |x| Integer(x) }
+    end
   end
 
   def run
     while !lost? && !win?
       @board.render
-      @board.search_position(get_guess)
+      guess = get_guess
+      guess[-1] == 'f' ? @board.toggle_flag(guess[0...2]) : @board.search_position(guess)
     end
   end
 

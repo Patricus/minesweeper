@@ -85,12 +85,16 @@ class Board
   end
 
   def search_position(position)
-    return if self[position].revealed == true
+    return if self[position].revealed == true || self[position].flagged == true
     self[position].reveal
     return if self[position].bomb == true
     look_up(position)
     look_down(position)
     look_left(position)
     look_right(position)
+  end
+
+  def toggle_flag(position)
+    self[position].toggle_flag
   end
 end
