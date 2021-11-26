@@ -1,9 +1,18 @@
 require_relative 'board.rb'
+require 'yaml'
 
 class Minesweeper
+  def load_board
+    @board = YAML.load(File.read('save.yml'))
+    File.delete('save.yml')
+  end
+
   def initialize
-    @turns = 0
-    @board = Board.new
+    if File.exists?('save.yml')
+      load_board
+    else
+      @board = Board.new
+    end
   end
 
   def guess_valid?(guess)
@@ -40,10 +49,19 @@ class Minesweeper
     return true
   end
 
+  def save_game
+    File.open('save.yml', 'w') { |file| file.write(@board.to_yaml) }
+    puts 'Game saved.'
+  end
+
   def get_guess
     puts 'Enter a position to reveal: (ex. "1,2")'
     guess = ''
     guess = gets.chomp
+    if guess == 'save'
+      save_game
+      guess = gets.chomp
+    end
     guess = gets.chomp while !guess_valid?(guess)
     if guess[-1] == 'f'
       return guess[0, 3].split(',').map { |x| Integer(x) } + [guess[-1]]
