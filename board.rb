@@ -16,7 +16,9 @@ class Board
         elsif tile.revealed == false
           line += '* '
         else
-          if tile.fringe < 1
+          if tile.bomb == true
+            line += 'B '
+          elsif tile.fringe < 1
             line += '_ '
           else
             line += "#{tile.fringe.to_s} "
@@ -32,34 +34,55 @@ class Board
   end
 
   def look_up(position)
+    return false if position.first <= 0
     pos_up = position.first - 1, position.last
-    return self[position].fringe += 1 if self[pos_up].bomb == true
-    self[pos_up].reveal
-    look_up(pos_up)
+    if self[pos_up].bomb == true
+      self[position].fringe += 1
+      return false
+    end
+
+    search_position(pos_up)
+    return true
   end
 
   def look_down(position)
+    return false if position.first >= @grid.length - 1
     pos_down = position.first + 1, position.last
-    return self[position].fringe += 1 if self[pos_down].bomb == true
-    self[pos_down].reveal
-    look_down(pos_down)
+    if self[pos_down].bomb == true
+      self[position].fringe += 1
+      return false
+    end
+
+    search_position(pos_down)
+    return true
   end
 
   def look_left(position)
+    return false if position.last <= 0
     pos_left = position.first, position.last - 1
-    return self[position].fringe += 1 if self[pos_left].bomb == true
-    self[pos_left].reveal
-    look_left(pos_left)
+    if self[pos_left].bomb == true
+      self[position].fringe += 1
+      return false
+    end
+
+    search_position(pos_left)
+    return true
   end
 
   def look_right(position)
+    return false if position.last >= @grid.length - 1
     pos_right = position.first, position.last + 1
-    return self[position].fringe += 1 if self[pos_right].bomb == true
-    self[pos_right].reveal
-    look_right(pos_right)
+    if self[pos_right].bomb == true
+      self[position].fringe += 1
+      return false
+    end
+
+    search_position(pos_right)
+    return true
   end
 
   def search_position(position)
+    return if self[position].revealed == true
     self[position].reveal
     look_up(position)
     look_down(position)
