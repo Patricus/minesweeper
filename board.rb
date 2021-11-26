@@ -9,22 +9,22 @@ class Board
 
   def render
     print ' '
-    @grid.each_with_index { |column, index| print ' ' + index.to_s }
+    @grid.each_with_index { |column, index| print (' ' + index.to_s).colorize(:light_red) }
     puts
     @grid.each_with_index do |row, index|
-      line = index.to_s + ' '
+      line = (index.to_s + ' ').colorize(:light_red)
       row.each do |tile|
         if tile.flagged == true
-          line += 'F '
+          line += 'F '.colorize(:cyan).colorize(background: :light_black)
         elsif tile.revealed == false
-          line += '* '
+          line += '* '.colorize(background: :light_black)
         else
           if tile.bomb == true
-            line += 'B '
+            line += 'B '.colorize(:red)
           elsif tile.fringe < 1
-            line += '_ '
+            line += '_ '.colorize(:light_black)
           else
-            line += "#{tile.fringe.to_s} "
+            line += "#{tile.fringe.to_s} ".colorize(:green)
           end
         end
       end

@@ -1,5 +1,6 @@
 require_relative 'board.rb'
 require 'yaml'
+require 'colorize'
 
 class Minesweeper
   def load_board
