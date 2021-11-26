@@ -8,8 +8,11 @@ class Board
   end
 
   def render
-    @grid.each do |row|
-      line = ''
+    print ' '
+    @grid.each_with_index { |column, index| print ' ' + index.to_s }
+    puts
+    @grid.each_with_index do |row, index|
+      line = index.to_s + ' '
       row.each do |tile|
         if tile.flagged == true
           line += 'F '
