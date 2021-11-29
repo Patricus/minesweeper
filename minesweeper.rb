@@ -1,4 +1,5 @@
 require_relative 'board.rb'
+require 'io/console'
 require 'yaml'
 require 'colorize'
 
@@ -14,6 +15,7 @@ class Minesweeper
     else
       @board = Board.new
     end
+    @cursor_location = [@board.grid.length / 2, @board.grid.length / 2]
   end
 
   def guess_valid?(guess)
@@ -51,37 +53,90 @@ class Minesweeper
   end
 
   def save_game
+    system('clear')
+    puts 'Saving Game...'
     File.open('save.yml', 'w') { |file| file.write(@board.to_yaml) }
     puts 'Game saved.'
+    puts 'Exiting.'
+    exit(true)
   end
 
-  def get_guess
-    puts 'Enter a position to reveal: (ex. "1,2")'
-    guess = ''
-    guess = gets.chomp
-    if guess == 'save'
+  def read_char
+    STDIN.echo = false
+    STDIN.raw!
+
+    input = STDIN.getc.chr
+    if input == "\e"
+      begin
+        input << STDIN.read_nonblock(3)
+      rescue StandardError
+        nil
+      end
+      begin
+        input << STDIN.read_nonblock(2)
+      rescue StandardError
+        nil
+      end
+    end
+  ensure
+    STDIN.echo = true
+    STDIN.cooked!
+
+    return input
+  end
+
+  def get_input
+    input = read_char
+    case input
+    when ' '
+      @board.search_position(@cursor_location)
+    when 'f'
+      @board.toggle_flag(@cursor_location)
+    when "\e"
       save_game
-      guess = gets.chomp
-    end
-    guess = gets.chomp while !guess_valid?(guess)
-    if guess[-1] == 'f'
-      return guess[0, 3].split(',').map { |x| Integer(x) } + [guess[-1]]
+    when "\e[A"
+      #UP ARROW
+      move_cursor_up
+    when "\e[B"
+      #DOWN ARROW
+      move_cursor_down
+    when "\e[D"
+      #LEFT ARROW
+      move_cursor_left
+    when "\e[C"
+      #RIGHT ARROW
+      move_cursor_right
     else
-      return guess[0, 3].split(',').map { |x| Integer(x) }
+
     end
+  end
+
+  def move_cursor_up
+    @cursor_location[0] -= 1 if @cursor_location[0] > 0
+  end
+
+  def move_cursor_down
+    @cursor_location[0] += 1 if @cursor_location[0] < @board.grid.length - 1
+  end
+
+  def move_cursor_left
+    @cursor_location[1] -= 1 if @cursor_location[1] > 0
+  end
+
+  def move_cursor_right
+    @cursor_location[1] += 1 if @cursor_location[1] < @board.grid.length - 1
   end
 
   def run
     while !lost? && !win?
-      @board.render
-      guess = get_guess
-      guess[-1] == 'f' ? @board.toggle_flag(guess[0...2]) : @board.search_position(guess)
+      @board.render(@cursor_location)
+      get_input
     end
   end
 
   def win?
     if @board.grid.flatten.none? { |tile| tile.revealed == false && tile.bomb == false }
-      @board.render
+      @board.render(@cursor_location)
       puts 'You win!'
       return true
     end
@@ -90,7 +145,7 @@ class Minesweeper
 
   def lost?
     if @board.grid.flatten.any? { |tile| tile.revealed == true && tile.bomb == true }
-      @board.render
+      @board.render(@cursor_location)
       puts 'You lost!'
       return true
     end

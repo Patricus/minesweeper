@@ -7,22 +7,58 @@ class Board
     @grid = Array.new(9) { Array.new(9) { Tile.new([true, false].sample) } }
   end
 
-  def render
-    print ' '
-    @grid.each_with_index { |column, index| print (' ' + index.to_s).colorize(:light_red) }
-    puts
-    @grid.each_with_index do |row, index|
-      line = (index.to_s + ' ').colorize(:light_red)
-      row.each do |tile|
+  def cursor_location_check(location, cursor_location)
+    return false if !cursor_location
+    return true if location == cursor_location
+  end
+
+  def render(cursor_location)
+    system('clear')
+    @grid.each_with_index do |row, row_index|
+      line = ' '.colorize(background: :light_black)
+      row.each_with_index do |tile, column_index|
+        if column_index == 0 && cursor_location_check([row_index, column_index], cursor_location)
+          line = '['.colorize(:light_red).colorize(background: :light_black)
+        end
         if tile.flagged == true
-          line += 'F '.colorize(:cyan).colorize(background: :light_black)
+          if cursor_location_check([row_index, column_index + 1], cursor_location)
+            line +=
+              ('F'.colorize(:cyan) + '['.colorize(:light_red)).colorize(background: :light_black)
+          elsif cursor_location_check([row_index, column_index], cursor_location)
+            line +=
+              ('F'.colorize(:cyan) + ']'.colorize(:light_red)).colorize(background: :light_black)
+          else
+            line += 'F '.colorize(:cyan).colorize(background: :light_black)
+          end
         elsif tile.revealed == false
-          line += '* '.colorize(background: :light_black)
-        else
-          if tile.bomb == true
+          if cursor_location_check([row_index, column_index + 1], cursor_location)
+            line += ('*' + '['.colorize(:light_red)).colorize(background: :light_black)
+          elsif cursor_location_check([row_index, column_index], cursor_location)
+            line += ('*' + ']'.colorize(:light_red)).colorize(background: :light_black)
+          else
+            line += '* '.colorize(background: :light_black)
+          end
+        elsif tile.bomb == true
+          if cursor_location_check([row_index, column_index + 1], cursor_location)
+            line += 'B'.colorize(:red) + '['.colorize(:light_red)
+          elsif cursor_location_check([row_index, column_index], cursor_location)
+            line += 'B'.colorize(:red) + ']'.colorize(:light_red)
+          else
             line += 'B '.colorize(:red)
-          elsif tile.fringe < 1
+          end
+        elsif tile.fringe < 1
+          if cursor_location_check([row_index, column_index + 1], cursor_location)
+            line += '_'.colorize(:light_black) + '['.colorize(:light_red)
+          elsif cursor_location_check([row_index, column_index], cursor_location)
+            line += '_'.colorize(:light_black) + ']'.colorize(:light_red)
+          else
             line += '_ '.colorize(:light_black)
+          end
+        else
+          if cursor_location_check([row_index, column_index + 1], cursor_location)
+            line += "#{tile.fringe.to_s}".colorize(:green) + '['.colorize(:light_red)
+          elsif cursor_location_check([row_index, column_index], cursor_location)
+            line += "#{tile.fringe.to_s}".colorize(:green) + ']'.colorize(:light_red)
           else
             line += "#{tile.fringe.to_s} ".colorize(:green)
           end
